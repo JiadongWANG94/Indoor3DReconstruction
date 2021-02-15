@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include <Eigen/dense>
+#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
 #include "data_type/base.hpp"
@@ -14,7 +14,7 @@ namespace core {
 
 class Calibrator {
  public:
-    sfmStatus_t Process(const std::vector<cv::Mat::Mat> &);
+    sfmStatus_t Process(const std::vector<cv::Mat> &);
 
     sfmStatus_t GetK(Eigen::Matrix3d *K_mat) {
         if (nullptr != K_mat) {

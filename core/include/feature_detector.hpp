@@ -19,7 +19,7 @@
 namespace sfm {
 namespace core {
 
-using OpencvFrame = Frame<cv::Mat::Mat, SURFFeature>;
+using OpencvFrame = Frame<cv::Mat, SURFFeature>;
 
 class FeatureDetector {
  public:
@@ -27,7 +27,7 @@ class FeatureDetector {
         return this->Detect(*frame.image(), &frame.features());
     }
 
-    sfmStatus_t Detect(const cv::Mat::Mat &image, std::vector<std::shared_ptr<SURFFeature> > *features);
+    sfmStatus_t Detect(const cv::Mat &image, std::vector<std::shared_ptr<SURFFeature> > *features);
 };
 
 }  // namespace core

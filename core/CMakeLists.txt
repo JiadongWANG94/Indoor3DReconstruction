@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(core LANGUAGE C CXX)
+project(core LANGUAGES C CXX)
 
 ###############
 ##  general  ##
@@ -17,10 +17,7 @@ set(lib_name ${PROJECT_NAME})
 ############
 
 find_package(OpenCV REQUIRED
-    # PATH "..."
 )
-
-find_package(Eigen REQUIRED)
 
 #############
 ##  build  ##
@@ -30,13 +27,15 @@ file(GLOB_RECURSE cpp_src "./src/*.cpp")
 file(GLOB_RECURSE cu_src "./src/*.cu")
 
 add_library(${lib_name} SHARED)
-target_sources(${lib_name} ${cpp_src})
+target_sources(${lib_name}
+    PRIVATE
+        ${cpp_src}
+)
 
 target_include_directories(${lib_name}
     PUBLIC
         include
         ${OpenCV_INCLUDE_DIRS}
-        ${EIGEN_INCLUDE_DIRS}
     PRIVATE
         src
 )
@@ -48,7 +47,8 @@ target_link_directories(${lib_name}
 
 target_link_libraries(${lib_name}
     PUBLIC
-        ${OpenCV_LIBS}        
+        ${OpenCV_LIBS}
+        Eigen
 )
 
 

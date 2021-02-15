@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <opencv2/opencv.hpp>
 
 #include "data_type/status.hpp"
 #include "data_type/image.hpp"
@@ -11,7 +12,7 @@ namespace app {
 class Executor {
  public:
     sfmStatus_t Init();
-    sfmStatus_t Process(std::vector<sfm::core::Image> images);
+    sfmStatus_t Process(std::vector<cv::Mat> images);
     sfmStatus_t Exit();
  private:
 

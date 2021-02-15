@@ -1,26 +1,31 @@
 
 #include "reconstructor.hpp"
 
+#include <opencv2/core/eigen.hpp>
+
+#include "matcher.hpp"
+#include "data_type/feature.hpp"
+
 namespace sfm {
 namespace core {
 
-
+template <>
 sfmStatus_t Reconstructor<cv::Mat, SURFFeature>::AddFrame(
     std::shared_ptr<Frame<cv::Mat, SURFFeature> > &frame) {
 
     std::vector<SURFFeature> src_features, dest_features;
-    for (auto &p_feature : base_frame_.features()) {
-        src_features.push_back(*p_features);
+    for (auto &p_feature : base_frame_->features()) {
+        src_features.push_back(*p_feature);
     }
-    for (auto &p_feature : frame.features()) {
-        dest_features.push_back(*p_features);
+    for (auto &p_feature : frame->features()) {
+        dest_features.push_back(*p_feature);
     }
     std::vector<std::pair<size_t, size_t> > matched_pairs;
     Matcher<SURFFeature>().CalculateMatchedPairs(src_features, dest_features, &matched_pairs);
 
     
     std::vector<cv::Point2f> src_point_list, dest_point_list;
-    for (size_t i = 0; i < matched_points.size(); ++i) {
+    for (size_t i = 0; i < matched_pairs.size(); ++i) {
         Eigen::Vector2f position;
         src_features.at(i).GetPosition(&position);
         src_point_list.emplace_back(position.x(),position.y());
@@ -29,7 +34,7 @@ sfmStatus_t Reconstructor<cv::Mat, SURFFeature>::AddFrame(
     }
 
     cv::Mat mask;
-    cv::Mat E = findEssentialMat(src_point_list, dest_point_list, focal_length_, principle_point_, RANSAC, 0.999, 1.0, mask);
+    cv::Mat E = findEssentialMat(src_point_list, dest_point_list, focal_length_, principle_point_, cv::RANSAC, 0.999, 1.0, mask);
     if (E.empty()) {
         std::cout << "Reconstructor : Failed to find essential matrix." << std::endl;
         return SFM_INTERNAL_ERROR;
@@ -37,7 +42,7 @@ sfmStatus_t Reconstructor<cv::Mat, SURFFeature>::AddFrame(
 
     float64_t feasible_count = countNonZero(mask);
 
-    if (feasible_count <= 15 || (feasible_count / p1.size()) < 0.6) {
+    if (feasible_count <= 15 || (feasible_count / src_point_list.size()) < 0.6) {
         std::cout << "Reconstructor : Invalid results." << std::endl;
         return SFM_INTERNAL_ERROR;
     }
@@ -48,12 +53,14 @@ sfmStatus_t Reconstructor<cv::Mat, SURFFeature>::AddFrame(
     cv::Mat proj1(3, 4, CV_32FC1);
     cv::Mat proj2(3, 4, CV_32FC1);
 
-    proj1(Range(0, 3), Range(0, 3)) = cv::Mat::eye(3, 3, CV_32FC1);
+    proj1(cv::Range(0, 3), cv::Range(0, 3)) = cv::Mat::eye(3, 3, CV_32FC1);
     proj1.col(3) = cv::Mat::zeros(3, 1, CV_32FC1);
 
-    R.convertTo(proj2(Range(0, 3), Range(0, 3)), CV_32FC1);
+    R.convertTo(proj2(cv::Range(0, 3), cv::Range(0, 3)), CV_32FC1);
     T.convertTo(proj2.col(3), CV_32FC1);
 
+    cv::Mat K;
+    cv::eigen2cv(K_, K);
     cv::Mat fK;
     K.convertTo(fK, CV_32FC1);
     proj1 = fK * proj1;

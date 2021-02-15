@@ -2,10 +2,12 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include "data_type/status.hpp"
 #include "data_type/frame.hpp"
 #include "data_type/structure.hpp"
+#include "data_type/base.hpp"
 
 namespace sfm {
 namespace core {
@@ -15,8 +17,13 @@ class Reconstructor {
  public:
     sfmStatus_t Init(
         const Eigen::Matrix3f &K,
-        std::shared_ptr<Frame<ImageType, FeatureType> > &base_frame) :
-        K_(K), base_frame_(base_frame), principle_point_(K(0,3), K(1,3)), focal_length_(0.5 * (K(0,0) + K(1,0))) {}
+        std::shared_ptr<Frame<ImageType, FeatureType> > &base_frame) {
+        K_ = K;
+        base_frame_.reset(base_frame);
+        principle_point_.x = K(0,3);
+        principle_point_.y = K(1,3);
+        focal_length_ = 0.5 * (K(0,0) + K(1,0));
+    }
     
     sfmStatus_t AddFrame(std::shared_ptr<Frame<ImageType, FeatureType> > &frame);
 

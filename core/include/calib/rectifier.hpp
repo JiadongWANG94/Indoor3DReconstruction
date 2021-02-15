@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include <Eigen/dense>
+#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/cuda.hpp>
 
@@ -21,7 +21,7 @@ class Rectifier {
     sfmStatus_t Reset(const Eigen::Matrix3d &K_mat, const std::vector<float32_t> &dist_coef);
     sfmStatus_t Reset(const std::string &);
 
-    sfmStatus_t Undistort(cv::Mat::Mat *image);
+    sfmStatus_t Undistort(cv::Mat *image);
     sfmStatus_t Undistort(cv::cuda::GpuMat *image);
 
  private:
