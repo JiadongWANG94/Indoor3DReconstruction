@@ -19,7 +19,7 @@ class Reconstructor {
         const Eigen::Matrix3f &K,
         std::shared_ptr<Frame<ImageType, FeatureType> > &base_frame) {
         K_ = K;
-        base_frame_.reset(base_frame);
+        base_frame_= base_frame;
         principle_point_.x = K(0,3);
         principle_point_.y = K(1,3);
         focal_length_ = 0.5 * (K(0,0) + K(1,0));
@@ -31,7 +31,7 @@ class Reconstructor {
 
     sfmStatus_t Optimize();
 
-    sfmStatus_t GetResults();
+    const Structure &GetResults() const { return structure_; };
  private:
     sfmStatus_t find_transform();
     sfmStatus_t reconstruct();

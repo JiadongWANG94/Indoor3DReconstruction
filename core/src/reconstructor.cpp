@@ -1,9 +1,9 @@
 
-#include "reconstructor.hpp"
+#include "reconstruction/reconstructor.hpp"
 
 #include <opencv2/core/eigen.hpp>
 
-#include "matcher.hpp"
+#include "reconstruction/matcher.hpp"
 #include "data_type/feature.hpp"
 
 namespace sfm {
@@ -17,12 +17,14 @@ sfmStatus_t Reconstructor<cv::Mat, SURFFeature>::AddFrame(
     for (auto &p_feature : base_frame_->features()) {
         src_features.push_back(*p_feature);
     }
+    std::cout << "Reconstructor : size of src features is " << base_frame_->features().size() << std::endl;
     for (auto &p_feature : frame->features()) {
         dest_features.push_back(*p_feature);
     }
+    std::cout << "Reconstructor : size of dest features is " << frame->features().size() << std::endl;
     std::vector<std::pair<size_t, size_t> > matched_pairs;
     Matcher<SURFFeature>().CalculateMatchedPairs(src_features, dest_features, &matched_pairs);
-
+    std::cout << "Reconstructor :  size of matched pairs is " << matched_pairs.size() << std::endl;
     
     std::vector<cv::Point2f> src_point_list, dest_point_list;
     for (size_t i = 0; i < matched_pairs.size(); ++i) {
@@ -44,6 +46,8 @@ sfmStatus_t Reconstructor<cv::Mat, SURFFeature>::AddFrame(
 
     if (feasible_count <= 15 || (feasible_count / src_point_list.size()) < 0.6) {
         std::cout << "Reconstructor : Invalid results." << std::endl;
+        std::cout << "Reconstructor : EssentialMat : " << E << std::endl;
+        std::cout << "Reconstructor : mask : " << mask << std::endl;
         return SFM_INTERNAL_ERROR;
     }
 
@@ -66,8 +70,23 @@ sfmStatus_t Reconstructor<cv::Mat, SURFFeature>::AddFrame(
     proj1 = fK * proj1;
     proj2 = fK * proj2;
 
-    cv::Mat structure;
-    triangulatePoints(proj1, proj2, src_point_list, dest_point_list, structure);
+    cv::Mat triangulated_points_homogeneous;
+    cv::triangulatePoints(proj1, proj2, src_point_list, dest_point_list, triangulated_points_homogeneous);
+    // std::cout << "Reconstructor : Results Homogeneous : " << std::endl << triangulated_points_homogeneous << std::endl;
+
+    cv::Mat triangulated_points_3d;
+    cv::transpose(triangulated_points_homogeneous, triangulated_points_3d);
+    cv::convertPointsFromHomogeneous(triangulated_points_3d, triangulated_points_3d);
+    std::cout << "Reconstructor : Results 3D : " << std::endl << triangulated_points_3d << std::endl;
+
+    for (int idx = 0; idx < triangulated_points_3d.rows; ++idx) {
+        structure_.points.emplace_back(
+            triangulated_points_3d.at<float32_t>(idx, 0),
+            triangulated_points_3d.at<float32_t>(idx, 1),
+            triangulated_points_3d.at<float32_t>(idx, 2));
+    }
+
+    std::cout << "Reconstructor : Succeed." << std::endl;
 }
 
 }  // namespace core

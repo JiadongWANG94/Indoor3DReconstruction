@@ -1,13 +1,18 @@
-#include "feature_detector.hpp"
+#include "reconstruction/feature_detector.hpp"
+
+#include <iostream>
+#include <opencv2/features2d.hpp>
 
 namespace sfm {
 namespace core {
 
 sfmStatus_t FeatureDetector::Detect(const cv::Mat &image, std::vector<std::shared_ptr<SURFFeature> > *features) {
-    cv::Ptr<cv::Feature2D> surf = cv::xfeatures2d::SURF::create(0, 3, 0.04, 10);
+    cv::Ptr<cv::Feature2D> orb = cv::ORB::create();
 	std::vector<cv::KeyPoint> key_points;
 	cv::Mat descriptors;
-	surf->detectAndCompute(image, cv::noArray(), key_points, descriptors);
+	orb->detectAndCompute(image, cv::noArray(), key_points, descriptors);
+    std::cout << "FeatureDetector : size of feature detected is " << key_points.size() << std::endl;
+    std::cout << "Image status : " << std::ends << " dim : " << image.rows << " " << image.cols << std::endl;
     for (size_t i = 0; i < key_points.size(); ++ i) {
         cv::Mat descriptor(1, descriptors.rows, descriptors.type());
         descriptors.row(i).copyTo(descriptor);
